@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Police Budget Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated background particles */
+        .particle {
+            position: fixed;
+            width: 3px;
+            height: 3px;
+            background: #00ffff;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            animation: float 4s infinite;
+            box-shadow: 0 0 10px #00ffff;
+        }
+
+        @keyframes float {
+            0%, 100% { 
+                opacity: 0;
+                transform: translateY(0) translateX(0);
+            }
+            50% { 
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(50px);
+            }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(10, 10, 30, 0.9);
+            border-radius: 30px;
+            padding: 50px;
+            box-shadow: 0 0 100px rgba(0, 255, 255, 0.3),
+                        0 0 50px rgba(255, 0, 255, 0.3),
+                        inset 0 0 50px rgba(0, 255, 255, 0.1);
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            animation: containerGlow 3s ease-in-out infinite;
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes containerGlow {
+            0%, 100% {
+                box-shadow: 0 0 100px rgba(0, 255, 255, 0.3),
+                            0 0 50px rgba(255, 0, 255, 0.3),
+                            inset 0 0 50px rgba(0, 255, 255, 0.1);
+            }
+            50% {
+                box-shadow: 0 0 120px rgba(0, 255, 255, 0.5),
+                            0 0 70px rgba(255, 0, 255, 0.5),
+                            inset 0 0 70px rgba(0, 255, 255, 0.2);
+            }
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 3.5em;
+            margin-bottom: 40px;
+            background: linear-gradient(90deg, #00ffff, #ff00ff, #ffff00, #00ffff);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 3s linear infinite, textGlow 2s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            font-weight: bold;
+            letter-spacing: 3px;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        @keyframes textGlow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.8)); }
+            50% { filter: drop-shadow(0 0 30px rgba(0, 255, 255, 1)); }
+        }
+
+        .content-section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(255, 0, 255, 0.1) 100%);
+            border-radius: 20px;
+            border: 2px solid;
+            border-image: linear-gradient(90deg, #00ffff, #ff00ff, #ffff00) 1;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .content-section:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(0, 255, 255, 0.4),
+                        0 0 40px rgba(255, 0, 255, 0.4);
+        }
+
+        .content-section h2 {
+            color: #00ffff;
+            margin-bottom: 20px;
+            font-size: 2em;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+            position: relative;
+            z-index: 1;
+        }
+
+        .content-section p {
+            line-height: 2;
+            color: #e0e0e0;
+            font-size: 1.1em;
+            position: relative;
+            z-index: 1;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            margin: 50px 0;
+        }
+
+        .chart-box {
+            background: linear-gradient(135deg, rgba(0, 30, 60, 0.8) 0%, rgba(30, 0, 60, 0.8) 100%);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.3),
+                        0 0 20px rgba(255, 0, 255, 0.3);
+            transition: all 0.4s ease;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-box::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ffff);
+            background-size: 400% 400%;
+            border-radius: 25px;
+            z-index: -1;
+            animation: borderGlow 4s ease infinite;
+            opacity: 0;
+        }
+
+        .chart-box:hover::after {
+            opacity: 1;
+        }
+
+        @keyframes borderGlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .chart-box:hover {
+            transform: translateY(-15px) scale(1.03);
+            box-shadow: 0 30px 80px rgba(0, 255, 255, 0.5),
+                        0 0 60px rgba(255, 0, 255, 0.5);
+        }
+
+        .chart-title {
+            text-align: center;
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 25px;
+            font-weight: bold;
+            font-size: 1.4em;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto !important;
+            filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.3));
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.2) 0%, rgba(255, 0, 255, 0.2) 100%);
+            padding: 35px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.4);
+            transition: all 0.4s ease;
+            animation: statPulse 2s ease-in-out infinite;
+            border: 2px solid rgba(0, 255, 255, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
+        }
+
+        .stat-card:nth-child(1) { 
+            animation-delay: 0s;
+            border-color: #00ffff;
+        }
+        .stat-card:nth-child(2) { 
+            animation-delay: 0.3s;
+            border-color: #ff00ff;
+        }
+        .stat-card:nth-child(3) { 
+            animation-delay: 0.6s;
+            border-color: #ffff00;
+        }
+
+        @keyframes statPulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 40px rgba(0, 255, 255, 0.4);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 60px rgba(0, 255, 255, 0.6);
+            }
+        }
+
+        .stat-card:hover {
+            transform: scale(1.1) rotate(2deg);
+            box-shadow: 0 20px 60px rgba(0, 255, 255, 0.6);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 15px 0;
+            background: linear-gradient(90deg, #00ffff, #ffff00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+        }
+
+        .stat-label {
+            font-size: 1em;
+            color: #00ffff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .highlight {
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            padding: 3px 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            display: inline-block;
+            animation: highlightPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes highlightPulse {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(0, 255, 255, 0.8);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Scanline effect */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 255, 0.03) 0px,
+                transparent 1px,
+                transparent 2px,
+                rgba(0, 255, 255, 0.03) 3px
+            );
+            pointer-events: none;
+            animation: scanlines 8s linear infinite;
+        }
+
+        @keyframes scanlines {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(10px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚔 POLICE BUDGET ANALYSIS 2017-2018</h1>
+        
+        <div class="content-section">
+            <h2>⚡ EXECUTIVE SUMMARY</h2>
+            <p>
+                The table and pie charts illustrates the sources of police funding in 2017 and 2018, 
+                as well as how this money was allocated across three major spending categories during 
+                the same period.
+            </p>
+        </div>
+
+        <div class="stats-grid" id="statsGrid"></div>
+
+        <div class="charts-container">
+            <div class="chart-box">
+                <div class="chart-title">💰 FUNDING SOURCES 2017 VS 2018</div>
+                <canvas id="fundingChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <div class="chart-title">📊 SPENDING DISTRIBUTION 2017</div>
+                <canvas id="spending2017Chart"></canvas>
+            </div>
+            <div class="chart-box">
+                <div class="chart-title">📊 SPENDING DISTRIBUTION 2018</div>
+                <canvas id="spending2018Chart"></canvas>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>📈 OVERALL TRENDS</h2>
+            <p>
+                Overall, the police budget experienced a <span class="highlight">moderate increase</span> from 2017 to 2018, 
+                mainly due to higher contributions from local taxes and the national government. In terms of 
+                expenditure, salaries consistently remained the dominant cost, although their share decreased 
+                slightly in 2018. Meanwhile, spending on technology rose noticeably, and the proportion 
+                allocated to buildings and transport stayed unchanged  in both years.
+            </p>
+        </div>
+
+        <div class="content-section">
+            <h2>💵 FUNDING SOURCES ANALYSIS</h2>
+            <p>
+                To begin with, the police force received funding from three main sources, all of which either 
+                increased or remained stable in 2018. The largest share came from the national government, 
+                rising slightly from <span class="highlight">£175.5 million</span> in 2017 to <span class="highlight">£177.8 million</span> a year later. 
+                A more significant change can be seen in local tax revenue, which jumped from £91.2 million 
+                to £102.3 million, marking the biggest increase among the sources. In contrast, money from 
+                other sources such as grants changed minimally, moving up from £38 million to only £38.5 million. 
+                As a result, the total budget increased by around <span class="highlight">£14 million</span> overall.
+            </p>
+        </div>
+
+        <div class="content-section">
+            <h2>💸 EXPENDITURE BREAKDOWN</h2>
+            <p>
+                Regarding how the budget was spent, salaries took the largest proportion in both years, 
+                although this category dropped from <span class="highlight">75%</span> in 2017 to <span class="highlight">69%</span> in 2018. At the same time, 
+                there was a noticeable rise in the share devoted to technology, which almost doubled from 
+                8% to 14%. Despite these changes, the proportion of spending on buildings and transport 
+                remained constant at 17% in each year, making it the only category with no variation.
+            </p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+        // Create animated particles
+        function createParticles() {
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 4 + 's';
+                particle.style.animationDuration = (Math.random() * 3 + 3) + 's';
+                document.body.appendChild(particle);
+            }
+        }
+        createParticles();
+
+        // Data
+        const fundingData = {
+            2017: {
+                national: 175.5,
+                local: 91.2,
+                other: 38.0
+            },
+            2018: {
+                national: 177.8,
+                local: 102.3,
+                other: 38.5
+            }
+        };
+
+        const spendingData = {
+            2017: {
+                salaries: 75,
+                buildings: 17,
+                technology: 8
+            },
+            2018: {
+                salaries: 69,
+                buildings: 17,
+                technology: 14
+            }
+        };
+
+        // Calculate totals
+        const total2017 = fundingData[2017].national + fundingData[2017].local + fundingData[2017].other;
+        const total2018 = fundingData[2018].national + fundingData[2018].local + fundingData[2018].other;
+        const increase = total2018 - total2017;
+
+        // Display stats with animation
+        const statsGrid = document.getElementById('statsGrid');
+        statsGrid.innerHTML = `
+            <div class="stat-card">
+                <div class="stat-label">2017 Total Budget</div>
+                <div class="stat-value">£${total2017.toFixed(1)}M</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">2018 Total Budget</div>
+                <div class="stat-value">£${total2018.toFixed(1)}M</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Budget Increase</div>
+                <div class="stat-value">£${increase.toFixed(1)}M</div>
+            </div>
+        `;
+
+        // Neon chart colors
+        const neonColors = {
+            cyan: 'rgba(0, 255, 255, 0.8)',
+            magenta: 'rgba(255, 0, 255, 0.8)',
+            yellow: 'rgba(255, 255, 0, 0.8)',
+            cyanBright: 'rgba(0, 255, 255, 1)',
+            magentaBright: 'rgba(255, 0, 255, 1)',
+            yellowBright: 'rgba(255, 255, 0, 1)'
+        };
+
+        // Custom chart defaults for neon effect
+        Chart.defaults.color = '#00ffff';
+        Chart.defaults.borderColor = 'rgba(0, 255, 255, 0.2)';
+
+        // Funding Sources Chart
+        const fundingCtx = document.getElementById('fundingChart').getContext('2d');
+        new Chart(fundingCtx, {
+            type: 'bar',
+            data: {
+                labels: ['National Govt', 'Local Taxes', 'Other Sources'],
+                datasets: [
+                    {
+                        label: '2017 (£M)',
+                        data: [fundingData[2017].national, fundingData[2017].local, fundingData[2017].other],
+                        backgroundColor: neonColors.cyan,
+                        borderColor: neonColors.cyanBright,
+                        borderWidth: 3,
+                        shadowBlur: 20,
+                        shadowColor: neonColors.cyanBright
+                    },
+                    {
+                        label: '2018 (£M)',
+                        data: [fundingData[2018].national, fundingData[2018].local, fundingData[2018].other],
+                        backgroundColor: neonColors.magenta,
+                        borderColor: neonColors.magentaBright,
+                        borderWidth: 3,
+                        shadowBlur: 20,
+                        shadowColor: neonColors.magentaBright
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#00ffff',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        borderColor: '#00ffff',
+                        borderWidth: 2,
+                        titleColor: '#00ffff',
+                        bodyColor: '#fff',
+                        padding: 15
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#00ffff',
+                            callback: function(value) {
+                                return '£' + value + 'M';
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(0, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#00ffff'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Spending 2017 Pie Chart
+        const spending2017Ctx = document.getElementById('spending2017Chart').getContext('2d');
+        new Chart(spending2017Ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Salaries (75%)', 'Buildings & Transport (17%)', 'Technology (8%)'],
+                datasets: [{
+                    data: [spendingData[2017].salaries, spendingData[2017].buildings, spendingData[2017].technology],
+                    backgroundColor: [neonColors.cyan, neonColors.magenta, neonColors.yellow],
+                    borderColor: [neonColors.cyanBright, neonColors.magentaBright, neonColors.yellowBright],
+                    borderWidth: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#00ffff',
+                            font: {
+                                size: 13,
+                                weight: 'bold'
+                            },
+                            padding: 15
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        borderColor: '#00ffff',
+                        borderWidth: 2,
+                        titleColor: '#00ffff',
+                        bodyColor: '#fff',
+                        padding: 15
+                    }
+                }
+            }
+        });
+
+        // Spending 2018 Pie Chart
+        const spending2018Ctx = document.getElementById('spending2018Chart').getContext('2d');
+        new Chart(spending2018Ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Salaries (69%)', 'Buildings & Transport (17%)', 'Technology (14%)'],
+                datasets: [{
+                    data: [spendingData[2018].salaries, spendingData[2018].buildings, spendingData[2018].technology],
+                    backgroundColor: [neonColors.cyan, neonColors.magenta, neonColors.yellow],
+                    borderColor: [neonColors.cyanBright, neonColors.magentaBright, neonColors.yellowBright],
+                    borderWidth: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#00ffff',
+                            font: {
+                                size: 13,
+                                weight: 'bold'
+                            },
+                            padding: 15
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        borderColor: '#00ffff',
+                        borderWidth: 2,
+                        titleColor: '#00ffff',
+                        bodyColor: '#fff',
+                        padding: 15
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
